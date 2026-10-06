@@ -1,0 +1,71 @@
+{
+  "name": "SkillBridge AI Matching & Explanation Evaluation Set",
+  "version": "1.0.0",
+  "rankingFormula": "score = 0.5 * similarity + 0.3 * skillOverlap + 0.1 * trust + 0.1 * freshness",
+  "evaluationCases": [
+    {
+      "id": "eval-01",
+      "student": {
+        "name": "Aarav Sharma",
+        "skills": ["React", "TypeScript", "Node.js", "Tailwind CSS"],
+        "trustScore": 98,
+        "collegeVerified": true
+      },
+      "candidate": {
+        "type": "team",
+        "title": "Smart India Hackathon: AI Green Energy Grid",
+        "skillsNeeded": ["Python", "React", "FastAPI"],
+        "postedHoursAgo": 6
+      },
+      "expectedMetrics": {
+        "skillOverlap": 0.33,
+        "similarityVectorThreshold": 0.85,
+        "expectedWhyMatchKeywords": ["React", "frontend", "team", "hackathon"]
+      },
+      "benchmarkLLMExplanation": "You know React and the hackathon team needs a frontend lead to build the energy grid UI."
+    },
+    {
+      "id": "eval-02",
+      "student": {
+        "name": "Priya Patel",
+        "skills": ["Python", "Machine Learning", "FastAPI", "PostgreSQL"],
+        "trustScore": 94,
+        "collegeVerified": true
+      },
+      "candidate": {
+        "type": "job",
+        "title": "Machine Learning Research Intern",
+        "skillsNeeded": ["Python", "FastAPI", "PyTorch"],
+        "postedHoursAgo": 12
+      },
+      "expectedMetrics": {
+        "skillOverlap": 0.67,
+        "similarityVectorThreshold": 0.90,
+        "expectedWhyMatchKeywords": ["Python", "FastAPI", "Machine Learning"]
+      },
+      "benchmarkLLMExplanation": "Your expertise in Python and FastAPI matches 2 out of 3 core requirements for this research internship."
+    },
+    {
+      "id": "eval-03",
+      "student": {
+        "name": "Aarav Sharma",
+        "skills": ["React", "TypeScript", "Node.js", "Tailwind CSS"],
+        "trustScore": 98,
+        "collegeVerified": true
+      },
+      "candidate": {
+        "type": "project",
+        "title": "Artisan Bakery Catalog & Online Pre-Order Menu",
+        "requiredSkills": ["React", "Tailwind CSS", "Responsive Design"],
+        "budgetINR": 18000,
+        "postedHoursAgo": 2
+      },
+      "expectedMetrics": {
+        "skillOverlap": 0.67,
+        "similarityVectorThreshold": 0.92,
+        "expectedWhyMatchKeywords": ["React", "Tailwind CSS", "catalog", "menu"]
+      },
+      "benchmarkLLMExplanation": "You have top-rated proficiencies in React and Tailwind CSS matching the bakery's responsive menu scope."
+    }
+  ]
+}

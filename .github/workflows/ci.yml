@@ -1,0 +1,41 @@
+name: SkillBridge CI
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-build:
+    name: Lint, Test & Build Modular Monolith
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: |
+          npm install
+          npm --prefix server install
+          npm --prefix client install
+          npm --prefix worker install
+
+      - name: Run Server Unit & Integration Tests (Vitest)
+        run: npm --prefix server test
+
+      - name: Build Server
+        run: npm --prefix server run build
+
+      - name: Build Client (Vite)
+        run: npm --prefix client run build
+
+      - name: Build Background Worker
+        run: npm --prefix worker run build

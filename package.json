@@ -1,0 +1,30 @@
+{
+  "name": "skillbridge-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client",
+    "worker"
+  ],
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:worker": "npm --prefix worker run dev",
+    "dev": "npm run dev:server",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "test:server": "npm --prefix server test",
+    "test:client": "npm --prefix client test",
+    "test": "npm run test:server",
+    "seed": "npm --prefix server run seed"
+  },
+  "keywords": [
+    "skillbridge",
+    "student-opportunity-platform",
+    "freelance",
+    "hackathons",
+    "mentorship"
+  ],
+  "author": "SkillBridge Team",
+  "license": "MIT"
+}
