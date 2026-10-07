@@ -45,35 +45,44 @@ export class ProjectsService {
     skill?: string;
     search?: string;
     status?: string;
-    minBudget?: number;
-    maxBudget?: number;
+    minBudget?: number | string;
+    maxBudget?: number | string;
   }): Promise<IProject[]> {
     const query: any = {};
 
-    if (filters.status && filters.status !== 'all') {
+    const isValidStr = (val?: string) => val && val.trim() !== '' && val !== 'undefined' && val !== 'null';
+
+    if (isValidStr(filters.status) && filters.status !== 'all') {
       query.status = filters.status;
-    } else if (!filters.status) {
+    } else if (!isValidStr(filters.status)) {
       query.status = { $in: ['open', 'agreement_pending', 'assigned', 'in_review'] };
     }
 
-    if (filters.category) {
-      query.category = { $regex: new RegExp(filters.category, 'i') };
+    if (isValidStr(filters.category) && filters.category !== 'all') {
+      query.category = { $regex: new RegExp(filters.category!.trim(), 'i') };
     }
 
-    if (filters.skill) {
-      query.requiredSkills = { $regex: new RegExp(filters.skill, 'i') };
+    if (isValidStr(filters.skill)) {
+      query.requiredSkills = { $regex: new RegExp(filters.skill!.trim(), 'i') };
     }
 
-    if (filters.minBudget || filters.maxBudget) {
+    const minB = filters.minBudget !== undefined && filters.minBudget !== null && String(filters.minBudget) !== 'undefined'
+      ? Number(filters.minBudget)
+      : null;
+    const maxB = filters.maxBudget !== undefined && filters.maxBudget !== null && String(filters.maxBudget) !== 'undefined'
+      ? Number(filters.maxBudget)
+      : null;
+
+    if ((minB !== null && !isNaN(minB)) || (maxB !== null && !isNaN(maxB))) {
       query.budgetINR = {};
-      if (filters.minBudget) query.budgetINR.$gte = Number(filters.minBudget);
-      if (filters.maxBudget) query.budgetINR.$lte = Number(filters.maxBudget);
+      if (minB !== null && !isNaN(minB)) query.budgetINR.$gte = minB;
+      if (maxB !== null && !isNaN(maxB)) query.budgetINR.$lte = maxB;
     }
 
-    if (filters.search) {
+    if (isValidStr(filters.search)) {
       query.$or = [
-        { title: { $regex: new RegExp(filters.search, 'i') } },
-        { description: { $regex: new RegExp(filters.search, 'i') } },
+        { title: { $regex: new RegExp(filters.search!.trim(), 'i') } },
+        { description: { $regex: new RegExp(filters.search!.trim(), 'i') } },
       ];
     }
 

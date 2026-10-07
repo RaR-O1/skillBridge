@@ -13,6 +13,7 @@ adminRouter.use(requireRole('admin'));
 
 adminRouter.get('/queue', AdminController.getVerificationQueue);
 adminRouter.post('/verify/:userId', validateBody(verifyUserActionSchema), AdminController.verifyUser);
+adminRouter.post('/verify-company/:companyId', AdminController.verifyCompany);
 adminRouter.post('/users/:userId/moderate', validateBody(moderateUserSchema), AdminController.moderateUser);
 adminRouter.get('/audit-logs', AdminController.getAuditLogs);
 adminRouter.get('/metrics', AdminController.getPlatformMetrics);

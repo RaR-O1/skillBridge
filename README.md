@@ -90,13 +90,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ```bash
 npm run test:server
 ```
-Executes all 22 integration tests covering:
-- Auth & 6-digit college email verification
-- Hackathon teams auto-closing logic & applications
-- Freelance project status machine & dual agreement confirmations
-- Payment received confirmation & review unlocks
-- Real-time room chat and notification broadcasts
-- Admin verification queue, moderation actions, and audit logging
+Executes all **63 integration tests** covering:
+- **Stage 1 (Phase 1)**: Auth & 6-digit college verification, hackathon squads, freelance project status machine, dual agreement confirmations, payment received confirmation, real-time room chat, reports, and admin audit logging.
+- **Stage 2A**: Company verification, jobs & internships, recruiter pipeline (`new` ➔ `shortlisted` ➔ `interview` ➔ `offer` ➔ `rejected`), talent search (strictly opted-in students with `visibility: true`).
+- **Stage 2B**: Startup profiles & open roles, co-founder pool, alumni mentors, interactive 1:1 session booking & rescheduling, learning resources, and alumni referral requests.
+- **Stage 2C**: High-performance vector embeddings, ranking formula (`0.5*sim + 0.3*skill + 0.1*trust + 0.1*freshness`), grounded LLM "why this match" generator with 24h TTL cache, thumbs up/down & dismiss recommendation feedback, AI profile critique, AI project scope helper, and opt-in chat summaries.
 
 ### Run Client Production Build
 ```bash

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, ThumbsUp, ThumbsDown, X, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { api } from '../../lib/api';
 
 interface RecommendationCardProps {
   id: string;
@@ -23,6 +24,24 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
 }) => {
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const [dismissed, setDismissed] = useState(false);
+
+  const handleAction = async (action: 'thumbs_up' | 'thumbs_down' | 'dismiss') => {
+    try {
+      await api.recommendations.recordFeedback({
+        entityId: id,
+        entityType: type as any,
+        action,
+      });
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    handleAction('dismiss');
+    if (onDismiss) onDismiss(id);
+  };
 
   if (dismissed) return null;
 
@@ -55,10 +74,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
         {/* Dismiss Button */}
         <button
-          onClick={() => {
-            setDismissed(true);
-            onDismiss && onDismiss(id);
-          }}
+          onClick={handleDismiss}
           className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
           title="Dismiss recommendation"
         >

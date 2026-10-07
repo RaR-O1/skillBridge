@@ -48,21 +48,23 @@ export class TeamsService {
     );
 
     const query: any = {};
-    if (filters.status && filters.status !== 'all') {
+    const isValidStr = (val?: string) => val && val.trim() !== '' && val !== 'undefined' && val !== 'null';
+
+    if (isValidStr(filters.status) && filters.status !== 'all') {
       query.status = filters.status;
-    } else if (!filters.status) {
+    } else if (!isValidStr(filters.status)) {
       query.status = 'open';
     }
 
-    if (filters.skill) {
-      query.skillsNeeded = { $regex: new RegExp(filters.skill, 'i') };
+    if (isValidStr(filters.skill)) {
+      query.skillsNeeded = { $regex: new RegExp(filters.skill!.trim(), 'i') };
     }
 
-    if (filters.search) {
+    if (isValidStr(filters.search)) {
       query.$or = [
-        { title: { $regex: new RegExp(filters.search, 'i') } },
-        { description: { $regex: new RegExp(filters.search, 'i') } },
-        { hackathonName: { $regex: new RegExp(filters.search, 'i') } },
+        { title: { $regex: new RegExp(filters.search!.trim(), 'i') } },
+        { description: { $regex: new RegExp(filters.search!.trim(), 'i') } },
+        { hackathonName: { $regex: new RegExp(filters.search!.trim(), 'i') } },
       ];
     }
 

@@ -15,10 +15,10 @@ const envSchema = z.object({
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
 
-  FEATURE_PHASE_2_JOBS: z.string().default('false').transform(val => val === 'true'),
-  FEATURE_PHASE_2_STARTUPS: z.string().default('false').transform(val => val === 'true'),
-  FEATURE_PHASE_2_MENTORSHIP: z.string().default('false').transform(val => val === 'true'),
-  FEATURE_AI_MATCHING: z.string().default('false').transform(val => val === 'true'),
+  FEATURE_PHASE_2_JOBS: z.string().default('true').transform(val => val === 'true'),
+  FEATURE_PHASE_2_STARTUPS: z.string().default('true').transform(val => val === 'true'),
+  FEATURE_PHASE_2_MENTORSHIP: z.string().default('true').transform(val => val === 'true'),
+  FEATURE_AI_MATCHING: z.string().default('true').transform(val => val === 'true'),
 
   LLM_API_KEY: z.string().optional(),
   LLM_MODEL: z.string().default('gemini-1.5-flash'),

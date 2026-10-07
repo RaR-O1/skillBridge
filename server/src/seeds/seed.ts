@@ -8,6 +8,10 @@ import { PortfolioItem, Review } from '../modules/portfolio/portfolio.model.js';
 import { Report } from '../modules/reports/reports.model.js';
 import { AuditLog } from '../modules/admin/admin.model.js';
 import { Notification } from '../modules/notifications/notifications.model.js';
+import { Company, Job, JobApplication } from '../modules/jobs/jobs.model.js';
+import { Startup, StartupApplication, CoFounderProfile } from '../modules/startups/startups.model.js';
+import { MentorProfile, MentorshipSession, LearningResource, AlumniReferral } from '../modules/mentorship/mentorship.model.js';
+import { RecommendationFeedback, WhyMatchCache } from '../modules/recommendations/recommendations.model.js';
 import { logger } from '../config/logger.js';
 
 async function seed() {
@@ -27,6 +31,18 @@ async function seed() {
     Report.deleteMany({}),
     AuditLog.deleteMany({}),
     Notification.deleteMany({}),
+    Company.deleteMany({}),
+    Job.deleteMany({}),
+    JobApplication.deleteMany({}),
+    Startup.deleteMany({}),
+    StartupApplication.deleteMany({}),
+    CoFounderProfile.deleteMany({}),
+    MentorProfile.deleteMany({}),
+    MentorshipSession.deleteMany({}),
+    LearningResource.deleteMany({}),
+    AlumniReferral.deleteMany({}),
+    RecommendationFeedback.deleteMany({}),
+    WhyMatchCache.deleteMany({}),
   ]);
 
   logger.info('Purged existing records. Creating seed users for each role...');
@@ -249,6 +265,183 @@ async function seed() {
     status: 'pending',
   });
 
+  // Seed Companies (Stage 2A)
+  const techSprintCo = await Company.create({
+    name: 'TechSprint Software Labs',
+    domain: 'techsprint.io',
+    description: 'Enterprise developer productivity and cloud tooling engineering partner.',
+    logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+    verified: true,
+    verifiedAt: new Date(),
+    members: [recruiter._id],
+  });
+
+  const nexusAiCo = await Company.create({
+    name: 'NexusAI Health',
+    domain: 'nexusai.dev',
+    description: 'AI diagnostic copilots for clinical radiology workflows.',
+    logoUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150',
+    verified: false, // Pending verification in admin queue
+    members: [startupFounder._id],
+  });
+
+  // Seed Jobs (Stage 2A)
+  const job1 = await Job.create({
+    companyId: techSprintCo._id,
+    postedById: recruiter._id,
+    title: 'Full Stack Engineering Intern',
+    type: 'internship',
+    location: 'Hybrid / Bangalore or Remote',
+    isRemote: true,
+    stipendINR: 25000,
+    requiredSkills: ['React', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
+    description: 'Join our campus sprint team to design and deploy modern web features for enterprise engineering teams.',
+    deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    status: 'open',
+  });
+
+  const job2 = await Job.create({
+    companyId: nexusAiCo._id,
+    postedById: startupFounder._id,
+    title: 'Machine Learning Research Intern',
+    type: 'internship',
+    location: 'Remote',
+    isRemote: true,
+    stipendINR: 30000,
+    requiredSkills: ['Python', 'FastAPI', 'PyTorch'],
+    description: 'Collaborate with clinical founders to train vision algorithms on curated imaging datasets.',
+    deadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+    status: 'open',
+  });
+
+  // Seed Job Applications & Recruiter Pipeline (Stage 2A)
+  await JobApplication.create({
+    jobId: job1._id,
+    studentId: priya._id,
+    note: 'Excited about developer productivity tooling! Winner of 3 hackathons with strong React & Node experience.',
+    stage: 'interview',
+    notes: [
+      {
+        authorId: recruiter._id,
+        text: 'Top candidate: aced the technical assignment. Scheduled for founder chat.',
+        createdAt: new Date(),
+      },
+    ],
+  });
+
+  await JobApplication.create({
+    jobId: job1._id,
+    studentId: aarav._id,
+    note: 'Building full-stack campus tools with 98 trust score and IIT Delhi verification.',
+    stage: 'shortlisted',
+  });
+
+  // Seed Startups & Open Roles (Stage 2B)
+  const nexusStartup = await Startup.create({
+    name: 'NexusAI Health',
+    pitch: 'AI copilots for diagnostic radiology clinics',
+    description: 'Transforming clinical workflows with multimodal vision models that reduce radiology turnaround time by 60%. Seed funded by Peak XV.',
+    stage: 'early_traction',
+    website: 'https://nexusai.dev',
+    founders: [startupFounder._id],
+    verified: true,
+    openRoles: [
+      {
+        roleTitle: 'Founding ML Engineer',
+        roleType: 'co_founder',
+        requiredSkills: ['PyTorch', 'Computer Vision', 'Python', 'FastAPI'],
+        equityOrStipend: '1.5% - 3.5% Equity + ₹45,000/mo',
+        description: 'Lead design and fine-tuning of medical imaging transformer models.',
+        status: 'open',
+        createdAt: new Date(),
+      },
+      {
+        roleTitle: 'Frontend Engineering Intern',
+        roleType: 'intern',
+        requiredSkills: ['React', 'TypeScript', 'Tailwind CSS'],
+        equityOrStipend: '₹25,000/mo stipend',
+        description: 'Build fast, responsive diagnostic viewer UI in React.',
+        status: 'open',
+        createdAt: new Date(),
+      },
+    ],
+  });
+
+  // Seed Co-Founder Pool (Stage 2B)
+  await CoFounderProfile.create({
+    userId: aarav._id,
+    college: 'IIT Delhi',
+    bio: 'Passionate full-stack developer with 3 hackathon wins looking to partner with a technical domain specialist in AI/EdTech.',
+    skills: ['React', 'Node.js', 'System Architecture', 'Product Design'],
+    idealCoFounderRole: 'AI / Machine Learning Co-Founder',
+    targetIndustry: 'EdTech / DevTools',
+    hoursPerWeek: 25,
+    lookingFor: 'Seeking an ML researcher to co-found a real-time developer education platform.',
+    active: true,
+  });
+
+  // Seed Mentor Profile (Stage 2B)
+  await MentorProfile.create({
+    mentorId: mentor._id,
+    currentCompany: 'Stripe',
+    jobTitle: 'Staff Software Engineer',
+    yearsExperience: 6,
+    bio: 'Alumnus of IIT Delhi. Specialized in high-throughput distributed payment pipelines, API architecture, and engineering leadership.',
+    college: 'IIT Delhi',
+    collegeVerified: true,
+    areasOfExpertise: ['Distributed Systems', 'System Design', 'API Design', 'Career Growth'],
+    hourlyAvailability: ['Wed 7:00 PM - 9:00 PM IST', 'Sat 10:00 AM - 1:00 PM IST'],
+    rating: 4.95,
+    reviewCount: 18,
+    sessionsCount: 32,
+    maxMentees: 5,
+  });
+
+  // Seed Mentorship Session (Stage 2B)
+  await MentorshipSession.create({
+    studentId: aarav._id,
+    mentorId: mentor._id,
+    topic: 'Transitioning from Hackathons to Production Distributed Architecture',
+    notes: 'Looking for advice on scaling database sharding and caching for high-load systems.',
+    status: 'confirmed',
+    proposedTimes: [new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)],
+    confirmedTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    meetingLink: 'https://meet.google.com/sb-mentor-session',
+    chatRoomId: `session-${aarav._id}-${mentor._id}`,
+  });
+
+  // Seed Learning Resources (Stage 2B)
+  await LearningResource.create([
+    {
+      title: 'Distributed Systems Patterns & Microservices Guide',
+      category: 'system_design',
+      url: 'https://martinfowler.com/articles/patterns-of-distributed-systems/',
+      description: 'Definitive guide to consensus protocols, write-ahead logs, and event sourcing.',
+      tags: ['System Design', 'Backend', 'Architecture'],
+      addedById: mentor._id,
+    },
+    {
+      title: 'Full-Stack TypeScript SaaS Architecture Blueprint',
+      category: 'backend',
+      url: 'https://github.com/alan2207/bulletproof-react',
+      description: 'Enterprise React & Node.js repository architecture for maintainable full-stack apps.',
+      tags: ['React', 'TypeScript', 'Clean Code'],
+      addedById: mentor._id,
+    },
+  ]);
+
+  // Seed Alumni Referral Request (Stage 2B)
+  await AlumniReferral.create({
+    mentorId: mentor._id,
+    studentId: priya._id,
+    companyName: 'Stripe',
+    role: 'Software Engineer Intern (Data & ML Infrastructure)',
+    resumeUrl: 'https://priyapatel.dev/resume.pdf',
+    note: 'Hi Vikram, I loved your talk at IIT Delhi! I have built open-source ML pipelines and would love an introduction to the ML Infra team.',
+    status: 'referred',
+    feedback: 'Referred to hiring manager in Bangalore tech team! Keep an eye on your email.',
+  });
+
   // Seed Initial Audit Logs
   await AuditLog.create([
     {
@@ -257,7 +450,7 @@ async function seed() {
       action: 'SYSTEM_BOOTSTRAP',
       targetType: 'System',
       targetId: 'platform',
-      details: { environment: 'development', version: '1.0.0' },
+      details: { environment: 'development', version: '2.0.0' },
     },
     {
       adminId: admin._id.toString(),

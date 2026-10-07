@@ -23,7 +23,11 @@ export const AdminPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'queue';
 
-  const [queue, setQueue] = useState<{ students: IUser[]; businesses: IUser[] }>({ students: [], businesses: [] });
+  const [queue, setQueue] = useState<{ students: IUser[]; businesses: IUser[]; companies?: any[] }>({
+    students: [],
+    businesses: [],
+    companies: [],
+  });
   const [reports, setReports] = useState<IReport[]>([]);
   const [auditLogs, setAuditLogs] = useState<IAuditLog[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
@@ -62,6 +66,15 @@ export const AdminPage: React.FC = () => {
   const handleVerify = async (userId: string, type: 'college' | 'business', approved: boolean) => {
     try {
       await api.admin.verifyUser(userId, { type, approved });
+      fetchAdminData();
+    } catch (err: any) {
+      alert(err.message || 'Action failed');
+    }
+  };
+
+  const handleVerifyCompany = async (companyId: string, approved: boolean) => {
+    try {
+      await api.admin.verifyCompany(companyId, approved);
       fetchAdminData();
     } catch (err: any) {
       alert(err.message || 'Action failed');
@@ -221,6 +234,51 @@ export const AdminPage: React.FC = () => {
                             className="px-3 py-1 text-xs bg-accentBlue hover:bg-blue-700 text-white font-bold rounded-button"
                           >
                             Verify Business
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Company Entity Verification Queue (Stage 2A) */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-card p-5 space-y-4">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-purple-600" />
+                  Hiring Company Profiles ({queue.companies?.length || 0})
+                </h3>
+
+                {(!queue.companies || queue.companies.length === 0) ? (
+                  <p className="text-xs text-slate-400 py-2">No pending company profile verifications.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {queue.companies.map((c: any) => (
+                      <div
+                        key={c._id}
+                        className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex items-center justify-between gap-3"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white">
+                            {c.name}
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            Domain: {c.domain} • {c.description?.slice(0, 70)}...
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleVerifyCompany(c._id, false)}
+                            className="px-2.5 py-1 text-xs border border-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-button"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => handleVerifyCompany(c._id, true)}
+                            className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-button"
+                          >
+                            Verify Company
                           </button>
                         </div>
                       </div>

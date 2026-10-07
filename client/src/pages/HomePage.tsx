@@ -23,6 +23,7 @@ export const HomePage: React.FC = () => {
   const { user } = useAuth();
   const [teams, setTeams] = useState<ITeam[]>([]);
   const [projects, setProjects] = useState<IProject[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +36,16 @@ export const HomePage: React.FC = () => {
         setProjects(projectsRes.projects?.slice(0, 2) || []);
       })
       .finally(() => setLoading(false));
-  }, []);
+
+    api.recommendations
+      .get({ limit: 2 })
+      .then((res) => {
+        if (res.recommendations && res.recommendations.length > 0) {
+          setRecommendations(res.recommendations);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -117,14 +127,46 @@ export const HomePage: React.FC = () => {
           <span className="text-xs text-slate-400">Match model v1</span>
         </div>
 
-        <RecommendationCard
-          id="rec-01"
-          title="Smart India Hackathon: AI Green Energy Grid"
-          type="team"
-          category="Smart India Hackathon 2026"
-          whyMatch="You know React and TypeScript, and the team needs frontend leadership with 1 spot left."
-          targetUrl="/teams"
-        />
+        {recommendations.length > 0 ? (
+          <div className="space-y-2">
+            {recommendations.map((rec) => {
+              const targetUrl =
+                rec.entityType === 'student'
+                  ? `/profile/${rec.entityId}`
+                  : rec.entityType === 'job'
+                  ? `/opportunities?tab=jobs`
+                  : `/projects`;
+              const title =
+                rec.entity?.title || rec.entity?.name || 'Top Recommended Opportunity';
+              const category =
+                rec.entity?.category || (rec.entity?.college ? `Campus Talent • ${rec.entity.college}` : 'Opportunity');
+
+              return (
+                <RecommendationCard
+                  key={rec.entityId}
+                  id={rec.entityId}
+                  title={title}
+                  type={rec.entityType}
+                  category={category}
+                  whyMatch={rec.whyThisMatch}
+                  targetUrl={targetUrl}
+                  onDismiss={(id) =>
+                    setRecommendations((prev) => prev.filter((r) => r.entityId !== id))
+                  }
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <RecommendationCard
+            id="rec-01"
+            title="Smart India Hackathon: AI Green Energy Grid"
+            type="team"
+            category="Smart India Hackathon 2026"
+            whyMatch="You know React and TypeScript, and the team needs frontend leadership with 1 spot left."
+            targetUrl="/teams"
+          />
+        )}
       </div>
 
       {/* Open Hackathon Teams Section */}

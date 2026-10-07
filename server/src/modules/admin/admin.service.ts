@@ -3,12 +3,13 @@ import { Project } from '../projects/projects.model.js';
 import { Team } from '../teams/teams.model.js';
 import { Report } from '../reports/reports.model.js';
 import { AuditLog, IAuditLog } from './admin.model.js';
+import { Company, ICompany } from '../jobs/jobs.model.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { logAdminAction } from '../../middleware/auditLogger.js';
 import { NotificationService } from '../notifications/notifications.service.js';
 
 export class AdminService {
-  static async getVerificationQueue(): Promise<{ students: IUser[]; businesses: IUser[] }> {
+  static async getVerificationQueue(): Promise<{ students: IUser[]; businesses: IUser[]; companies: ICompany[] }> {
     const students = await User.find({
       role: 'student',
       collegeEmail: { $exists: true, $ne: '' },
@@ -20,7 +21,38 @@ export class AdminService {
       businessVerified: false,
     }).limit(50);
 
-    return { students, businesses };
+    const companies = await Company.find({ verified: false }).limit(50);
+
+    return { students, businesses, companies };
+  }
+
+  static async verifyCompany(
+    adminId: string,
+    adminEmail: string,
+    companyId: string,
+    approved: boolean
+  ): Promise<ICompany> {
+    const company = await Company.findById(companyId);
+    if (!company) {
+      throw new AppError('Company not found', 404, 'NOT_FOUND');
+    }
+
+    company.verified = approved;
+    if (approved) {
+      company.verifiedAt = new Date();
+    }
+    await company.save();
+
+    await logAdminAction({
+      adminId,
+      adminEmail,
+      action: approved ? 'VERIFY_COMPANY_APPROVED' : 'VERIFY_COMPANY_REJECTED',
+      targetType: 'Company',
+      targetId: company._id.toString(),
+      details: { approved, name: company.name, domain: company.domain },
+    });
+
+    return company;
   }
 
   static async verifyUser(

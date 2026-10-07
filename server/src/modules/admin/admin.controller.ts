@@ -16,6 +16,24 @@ export class AdminController {
     }
   }
 
+  static async verifyCompany(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError('Unauthorized', 401);
+      const company = await AdminService.verifyCompany(
+        req.user._id.toString(),
+        req.user.email,
+        req.params.companyId,
+        req.body.approved !== false
+      );
+      return res.status(200).json({
+        success: true,
+        data: { company },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async verifyUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError('Unauthorized', 401);

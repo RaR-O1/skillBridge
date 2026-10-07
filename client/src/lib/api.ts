@@ -34,6 +34,18 @@ class ApiClient {
     return data.data;
   }
 
+  private buildQuery(params?: Record<string, any>): string {
+    if (!params) return '';
+    const cleanParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+        cleanParams[key] = String(value);
+      }
+    }
+    const query = new URLSearchParams(cleanParams).toString();
+    return query ? `?${query}` : '';
+  }
+
   // Auth endpoints
   auth = {
     login: (body: { email: string; role?: string; name?: string }) =>
@@ -56,8 +68,7 @@ class ApiClient {
   // Teams endpoints
   teams = {
     list: (params?: { skill?: string; search?: string; status?: string }) => {
-      const query = new URLSearchParams(params as any).toString();
-      return this.request(`/teams${query ? `?${query}` : ''}`);
+      return this.request(`/teams${this.buildQuery(params)}`);
     },
     getById: (id: string) => this.request(`/teams/${id}`),
     create: (body: any) => this.request('/teams', { method: 'POST', body: JSON.stringify(body) }),
@@ -74,8 +85,7 @@ class ApiClient {
   // Projects endpoints
   projects = {
     list: (params?: Record<string, any>) => {
-      const query = new URLSearchParams(params).toString();
-      return this.request(`/projects${query ? `?${query}` : ''}`);
+      return this.request(`/projects${this.buildQuery(params)}`);
     },
     getById: (id: string) => this.request(`/projects/${id}`),
     create: (body: any) =>
@@ -121,8 +131,7 @@ class ApiClient {
     getProfile: (idOrUid: string) => this.request(`/users/profile/${idOrUid}`),
     updateProfile: (body: any) => this.request('/users/profile', { method: 'PATCH', body: JSON.stringify(body) }),
     searchTalent: (params?: any) => {
-      const query = new URLSearchParams(params).toString();
-      return this.request(`/users/talent${query ? `?${query}` : ''}`);
+      return this.request(`/users/talent${this.buildQuery(params)}`);
     },
   };
 
@@ -146,8 +155,7 @@ class ApiClient {
   reports = {
     create: (body: any) => this.request('/reports', { method: 'POST', body: JSON.stringify(body) }),
     list: (params?: any) => {
-      const query = new URLSearchParams(params).toString();
-      return this.request(`/reports${query ? `?${query}` : ''}`);
+      return this.request(`/reports${this.buildQuery(params)}`);
     },
     updateStatus: (id: string, body: any) =>
       this.request(`/reports/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) }),
@@ -158,10 +166,125 @@ class ApiClient {
     getQueue: () => this.request('/admin/queue'),
     verifyUser: (userId: string, body: { type: 'college' | 'business'; approved: boolean; reason?: string }) =>
       this.request(`/admin/verify/${userId}`, { method: 'POST', body: JSON.stringify(body) }),
+    verifyCompany: (companyId: string, approved: boolean) =>
+      this.request(`/admin/verify-company/${companyId}`, { method: 'POST', body: JSON.stringify({ approved }) }),
     moderateUser: (userId: string, body: { action: 'warn' | 'suspend' | 'ban' | 'reactivate'; reason: string }) =>
       this.request(`/admin/users/${userId}/moderate`, { method: 'POST', body: JSON.stringify(body) }),
     getAuditLogs: (limit = 100) => this.request(`/admin/audit-logs?limit=${limit}`),
     getMetrics: () => this.request('/admin/metrics'),
+  };
+
+  // Jobs, Companies & Recruiter Pipeline (Stage 2A)
+  jobs = {
+    list: (params?: Record<string, any>) => this.request(`/jobs${this.buildQuery(params)}`),
+    getById: (id: string) => this.request(`/jobs/${id}`),
+    create: (body: any) => this.request('/jobs', { method: 'POST', body: JSON.stringify(body) }),
+    apply: (id: string, note?: string) =>
+      this.request(`/jobs/${id}/apply`, { method: 'POST', body: JSON.stringify({ note }) }),
+    getMyApplications: () => this.request('/jobs/applications/my'),
+    getApplications: (jobId: string) => this.request(`/jobs/${jobId}/applications`),
+    updateStage: (appId: string, stage: string) =>
+      this.request(`/jobs/applications/${appId}/stage`, { method: 'PATCH', body: JSON.stringify({ stage }) }),
+    addNote: (appId: string, text: string) =>
+      this.request(`/jobs/applications/${appId}/notes`, { method: 'POST', body: JSON.stringify({ text }) }),
+    bulkUpdateStage: (applicationIds: string[], stage: string) =>
+      this.request('/jobs/applications/bulk-stage', {
+        method: 'POST',
+        body: JSON.stringify({ applicationIds, stage }),
+      }),
+    companies: {
+      list: () => this.request('/jobs/companies'),
+      getById: (id: string) => this.request(`/jobs/companies/${id}`),
+      create: (body: any) => this.request('/jobs/companies', { method: 'POST', body: JSON.stringify(body) }),
+    },
+  };
+
+  // Startups & Co-Founder Matching (Stage 2B)
+  startups = {
+    list: (params?: Record<string, any>) => this.request(`/startups${this.buildQuery(params)}`),
+    getById: (id: string) => this.request(`/startups/${id}`),
+    create: (body: any) => this.request('/startups', { method: 'POST', body: JSON.stringify(body) }),
+    addRole: (startupId: string, body: any) =>
+      this.request(`/startups/${startupId}/roles`, { method: 'POST', body: JSON.stringify(body) }),
+    updateRoleStatus: (startupId: string, roleId: string, status: string) =>
+      this.request(`/startups/${startupId}/roles/${roleId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+    applyToRole: (startupId: string, roleId: string, coverLetter?: string) =>
+      this.request(`/startups/${startupId}/roles/${roleId}/apply`, {
+        method: 'POST',
+        body: JSON.stringify({ coverLetter }),
+      }),
+    getApplications: (startupId: string) => this.request(`/startups/${startupId}/applications`),
+    updateApplicationStatus: (appId: string, status: string) =>
+      this.request(`/startups/applications/${appId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+    listCoFounders: (params?: Record<string, any>) =>
+      this.request(`/startups/cofounders${this.buildQuery(params)}`),
+    getMyCoFounderProfile: () => this.request('/startups/cofounders/me'),
+    upsertCoFounderProfile: (body: any) =>
+      this.request('/startups/cofounders/profile', { method: 'POST', body: JSON.stringify(body) }),
+  };
+
+  // Mentorship & Learning Resources & Alumni Referrals (Stage 2B)
+  mentorship = {
+    listMentors: (params?: Record<string, any>) =>
+      this.request(`/mentorship/mentors${this.buildQuery(params)}`),
+    getMentorById: (id: string) => this.request(`/mentorship/mentors/${id}`),
+    upsertProfile: (body: any) =>
+      this.request('/mentorship/mentors/profile', { method: 'POST', body: JSON.stringify(body) }),
+    listSessions: () => this.request('/mentorship/sessions'),
+    requestSession: (mentorId: string, body: { topic: string; notes?: string; proposedTimes: string[] }) =>
+      this.request(`/mentorship/sessions/request/${mentorId}`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    proposeTimes: (sessionId: string, proposedTimes: string[]) =>
+      this.request(`/mentorship/sessions/${sessionId}/propose-times`, {
+        method: 'PATCH',
+        body: JSON.stringify({ proposedTimes }),
+      }),
+    confirmSession: (sessionId: string, body: { confirmedTime: string; meetingLink?: string }) =>
+      this.request(`/mentorship/sessions/${sessionId}/confirm`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+    submitFeedback: (sessionId: string, body: { rating: number; review: string }) =>
+      this.request(`/mentorship/sessions/${sessionId}/feedback`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    listResources: (params?: { category?: string; tag?: string }) =>
+      this.request(`/mentorship/resources${this.buildQuery(params)}`),
+    createResource: (body: any) =>
+      this.request('/mentorship/resources', { method: 'POST', body: JSON.stringify(body) }),
+    listReferrals: () => this.request('/mentorship/referrals'),
+    requestReferral: (body: { mentorId: string; companyName: string; role: string; resumeUrl: string; note?: string }) =>
+      this.request('/mentorship/referrals', { method: 'POST', body: JSON.stringify(body) }),
+    updateReferral: (referralId: string, body: { status: string; feedback?: string }) =>
+      this.request(`/mentorship/referrals/${referralId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+  };
+
+  // Recommendations & Vector Matching (Stage 2C)
+  recommendations = {
+    get: (params?: Record<string, any>) =>
+      this.request(`/recommendations${this.buildQuery(params)}`),
+    recordFeedback: (body: { entityId: string; entityType: string; action: 'thumbs_up' | 'thumbs_down' | 'dismiss' }) =>
+      this.request('/recommendations/feedback', { method: 'POST', body: JSON.stringify(body) }),
+  };
+
+  // AI Helpers (Stage 2C)
+  ai = {
+    getProfileFeedback: () => this.request('/ai/profile-feedback'),
+    generateProjectScope: (body: { prompt: string; category?: string; targetTimelineWeeks?: number }) =>
+      this.request('/ai/scope-helper', { method: 'POST', body: JSON.stringify(body) }),
+    getChatSummary: (roomId: string) => this.request(`/ai/chat-summary/${roomId}`),
   };
 }
 

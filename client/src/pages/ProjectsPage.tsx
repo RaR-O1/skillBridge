@@ -7,7 +7,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { PaymentNoteBanner } from '../components/common/PaymentNoteBanner';
 import { useAuth } from '../lib/authContext';
-import { Briefcase, Search, Plus, Filter, IndianRupee, X } from 'lucide-react';
+import { Briefcase, Search, Plus, Filter, IndianRupee, X, Sparkles } from 'lucide-react';
 
 export const ProjectsPage: React.FC = () => {
   const { user } = useAuth();
@@ -33,6 +33,44 @@ export const ProjectsPage: React.FC = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // AI Scope Helper
+  const [aiScopePrompt, setAiScopePrompt] = useState('');
+  const [aiScopeLoading, setAiScopeLoading] = useState(false);
+
+  const handleAiScope = async () => {
+    if (!aiScopePrompt.trim()) return;
+    setAiScopeLoading(true);
+    try {
+      const res = await api.ai.generateProjectScope({
+        prompt: aiScopePrompt.trim(),
+        category: formData.category,
+      });
+      if (res.scope) {
+        setFormData({
+          title: res.scope.suggestedTitle,
+          description: `${res.scope.scopeSummary}\n\nMilestones:\n${res.scope.milestones
+            ?.map((m: any) => `• ${m.title}: ${m.description}`)
+            .join('\n')}`,
+          category: res.scope.category || formData.category,
+          requiredSkills: res.scope.requiredSkills?.join(', ') || formData.requiredSkills,
+          budgetINR: res.scope.suggestedBudgetINR || formData.budgetINR,
+          deadline: new Date(Date.now() + (res.scope.timelineWeeks || 3) * 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
+        });
+      }
+    } catch {
+      // Fallback
+      setFormData((prev) => ({
+        ...prev,
+        title: aiScopePrompt.slice(0, 45),
+        description: `Project Scope: ${aiScopePrompt}\n\nDeliverables:\n• Milestone 1: Design & schema review\n• Milestone 2: Functional prototype & test cases\n• Milestone 3: Final delivery & hand-off`,
+      }));
+    } finally {
+      setAiScopeLoading(false);
+    }
+  };
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -229,6 +267,34 @@ export const ProjectsPage: React.FC = () => {
                 {formError}
               </div>
             )}
+
+            {/* AI Scope Helper Assistant */}
+            <div className="mb-4 p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-brand dark:text-purple-300">
+                <Sparkles className="w-4 h-4" />
+                <span>AI Scope Helper (Optional)</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                Describe what you want built in plain English. AI drafts a structured scope, milestones, and suggested budget. Always 100% editable before publishing.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. Build an online ordering system for our bakery with UPI payment..."
+                  value={aiScopePrompt}
+                  onChange={(e) => setAiScopePrompt(e.target.value)}
+                  className="flex-1 text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiScope}
+                  disabled={aiScopeLoading || !aiScopePrompt.trim()}
+                  className="px-3 py-1.5 text-xs font-bold text-white bg-brand hover:bg-brand-hover disabled:opacity-50 rounded-button shadow-2xs shrink-0"
+                >
+                  {aiScopeLoading ? 'Drafting...' : 'Draft Scope ✨'}
+                </button>
+              </div>
+            </div>
 
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
